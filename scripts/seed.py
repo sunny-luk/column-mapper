@@ -18,6 +18,11 @@ def seed():
             "email": "email_address",
             "phone": "tel_no",
         },
+        "Dummy": {
+            "username": "userName",
+            "email": "eMail",
+            "phone": "phone_id",
+        },
     }
 
     for name, mapping_dict in mappings.items():
