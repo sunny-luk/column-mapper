@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Column Mapper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Data Ingestion Tool</h1>
+        
+        <form id="uploadForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select CSV File</label>
+                <input type="file" id="csvFile" name="file" accept=".csv" required
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Apply Saved Mapping (Optional)</label>
+                <select id="mappingSelect" name="apply_mapping_name" 
+                    class="block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">-- No Mapping (Auto-suggest) --</option>
+                </select>
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="hasHeader" name="has_header" checked class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                <label for="hasHeader" class="ml-2 block text-sm text-gray-700">File has headers</label>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-medium">
+                Upload and Suggest Mapping
+            </button>
+        </form>
+
+        <div id="status" class="mt-4 text-sm text-center hidden"></div>
+    </div>
+
+    <script>
+        // Fetch saved mappings on page load
+        async function loadMappings() {
+            try {
+                const response = await fetch('/mappings');
+                const data = await response.json();
+                const select = document.getElementById('mappingSelect');
+                data.mappings.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    select.appendChild(opt);
+                });
+            } catch (err) { console.error("Could not load mappings", err); }
+        }
+
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            status.classList.remove('hidden');
+            status.innerText = "Uploading file...";
+
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (response.ok) {
+                    status.className = "mt-4 text-sm text-center text-green-600";
+                    status.innerText = "Success! Redirecting to mapper...";
+                    // Store result in sessionStorage to pass to the next page
+                    sessionStorage.setItem('uploadResult', JSON.stringify(result));
+                    window.location.href = '/ui/mapper.html'; // Next UI page
+                } else {
+                    throw new Error(result.detail || "Upload failed");
+                }
+            } catch (err) {
+                status.className = "mt-4 text-sm text-center text-red-600";
+                status.innerText = err.message;
+                btn.disabled = false;
+                btn.innerText = "Upload and Suggest Mapping";
+            }
+        };
+
+        loadMappings();
+    </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Mapping - Column Mapper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Confirm Column Mapping</h1>
+                <span id="fileNameBadge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded"></span>
+            </div>
+
+            <p class="text-gray-600 mb-8">Match the columns from your file to the system fields. We've suggested matches based on your file content.</p>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-gray-100">
+                            <th class="py-4 px-2 text-sm font-semibold text-gray-600 uppercase">CSV Column (Source)</th>
+                            <th class="py-4 px-2 text-sm font-semibold text-gray-600 uppercase">System Field (Target)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mappingTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t pt-6">
+                <button onclick="window.location.href='/ui/index.html'" class="text-gray-500 hover:text-gray-700 font-medium">
+                    ← Back to Upload
+                </button>
+                <div class="space-x-4">
+                    <button id="processBtn" onclick="processMapping()" class="bg-green-600 text-white py-2 px-8 rounded-md hover:bg-green-700 transition font-bold shadow-lg">
+                        Confirm & Process Data
+                    </button>
+                </div>
+            </div>
+            <div id="errorBox" class="mt-4 p-4 bg-red-50 text-red-700 rounded-md hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        let uploadData = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawData = sessionStorage.getItem('uploadResult');
+            if (!rawData) {
+                window.location.href = '/ui/index.html';
+                return;
+            }
+
+            uploadData = JSON.parse(rawData);
+            document.getElementById('fileNameBadge').textContent = uploadData.filename;
+            renderTable();
+        });
+
+        function renderTable() {
+            const tbody = document.getElementById('mappingTableBody');
+            const { source_columns, target_fields, suggested_mapping } = uploadData;
+
+            // Flip suggested mapping for easy lookup (target -> source to source -> target)
+            const suggestionLookup = {};
+            for (const [target, source] of Object.entries(suggested_mapping)) {
+                suggestionLookup[source] = target;
+            }
+
+            source_columns.forEach(col => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-50 hover:bg-gray-50 transition";
+                
+                row.innerHTML = `
+                    <td class="py-4 px-2 font-medium text-gray-700">${col}</td>
+                    <td class="py-4 px-2">
+                        <select class="mapping-select block w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-blue-500" data-source="${col}">
+                            <option value="">-- Ignore Column --</option>
+                            ${target_fields.map(field => `
+                                <option value="${field}" ${suggestionLookup[col] === field ? 'selected' : ''}>
+                                    ${field}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function processMapping() {
+            const btn = document.getElementById('processBtn');
+            const errorBox = document.getElementById('errorBox');
+            
+            // 1. Build the final mapping object from the dropdown values
+            const finalMapping = {};
+            document.querySelectorAll('.mapping-select').forEach(select => {
+                if (select.value) {
+                    finalMapping[select.value] = select.getAttribute('data-source');
+                }
+            });
+
+            btn.disabled = true;
+            btn.innerText = "Processing Rows...";
+            errorBox.classList.add('hidden');
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: uploadData.saved_filename,
+                        mapping: finalMapping
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    sessionStorage.setItem('processResult', JSON.stringify(result));
+                    // Success! Move to results page (or show summary)
+                    alert("Processing complete! " + result.valid_count + " rows ingested.");
+                } else {
+                    throw new Error(result.detail || "Processing failed");
+                }
+            } catch (err) {
+                errorBox.innerText = err.message;
+                errorBox.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = "Confirm & Process Data";
+            }
+        }
+    </script>
+</body>
+</html>

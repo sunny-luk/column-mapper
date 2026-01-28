@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, status, Depends, Form
+from fastapi.staticfiles import StaticFiles
 from app.core.csv_service import CSVService
 from app.core.mapping_engine import MappingEngine
 from app.core.repository import SQLiteRepository
@@ -35,6 +36,9 @@ RepoDep = Annotated[SQLiteRepository, Depends(get_repository)]
 EngineDep = Annotated[MappingEngine, Depends(get_mapping_engine)]
 
 app = FastAPI(title="Column Mapper API")
+
+# Mount the 'app/ui' folder to the '/ui' path
+app.mount("/ui", StaticFiles(directory="app/ui"), name="static")
 
 
 @app.post("/upload", status_code=status.HTTP_201_CREATED)
@@ -95,3 +99,16 @@ def upload_file(
         "target_fields": list(schema.model_fields.keys()),
         "suggested_mapping": suggested_mapping,
     }
+
+
+@app.get("/mappings")
+def list_mappings(repository: RepoDep):
+    """Returns all saved mappings for the UI dropdown."""
+    try:
+        mappings = repository.list_mappings()
+        return {"mappings": mappings}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}",
+        )

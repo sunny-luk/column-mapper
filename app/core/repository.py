@@ -47,3 +47,8 @@ class SQLiteRepository(BaseRepository):
                 "SELECT mapping_json FROM mappings WHERE name = ?", (name,)
             ).fetchone()
             return json.loads(row[0]) if row else None
+
+    def list_mappings(self) -> list[str] | None:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute("SELECT name FROM mappings").fetchall()
+            return rows
