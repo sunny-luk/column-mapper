@@ -24,4 +24,4 @@ class ValidationService:
         # Check which required fields are missing from the mapping keys
         missing_fields = list(required_fields - mapped_fields)
 
-        return missing_fields
+        return sorted(missing_fields)

@@ -6,7 +6,8 @@ from app.core.mapping_engine import MappingEngine
 from app.core.repository import SQLiteRepository
 from app.core.schemas.user_info import UserInfo
 from app.core.mapping_strategies.case_insensitive import CaseInsensitiveMappingStrategy
-from typing import Annotated
+from app.core.validation_service import ValidationService
+from typing import Annotated, Dict
 from pydantic import BaseModel
 
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
@@ -112,3 +113,29 @@ def list_mappings(repository: RepoDep):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}",
         )
+
+
+class SaveMappingRequest(BaseModel):
+    filename: str
+    mapping: Dict[str, str | None]
+
+
+@app.post("/validate")
+def validate_mapping(
+    request: SaveMappingRequest, schema: type[BaseModel] = Depends(get_schema)
+):
+    validator = ValidationService()
+
+    missing_cols = validator.validate_columns(request.mapping, schema)
+
+    if missing_cols:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required mappings for: {', '.join(missing_cols)}",
+        )
+
+    return {
+        "status": "success",
+        "message": "All required columns mapped successfully.",
+        "mapped_count": len(request.mapping),
+    }

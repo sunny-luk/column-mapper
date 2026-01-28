@@ -139,3 +139,20 @@ def test_upload_file_mapping_not_found(test_setup):
     detail = response.json()["detail"]
     assert non_existent_mapping in detail
     assert "Could not find saved mapping" in detail
+
+
+def test_validate_mapping_successful(test_setup):
+    response = client.post(
+        "/validate",
+        json={"filename": "abc.csv", "mapping": {"username": "u", "email": "e"}},
+    )
+    assert response.status_code == 200
+
+
+def test_validate_mapping_failed(test_setup):
+    response = client.post(
+        "/validate",
+        json={"filename": "abc.csv", "mapping": {"phone_number": "p"}},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Missing required mappings for: email, username"
