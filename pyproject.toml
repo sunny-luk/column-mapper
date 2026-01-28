@@ -3,6 +3,7 @@ name = "column-mapper"
 version = "0.1.0"
 dependencies = [
     "fastapi",
+    "fastapi[standard]",
     "uvicorn[standard]",
     "pandas",
     "python-multipart",

@@ -1,12 +1,14 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache
 
 # Environments
 .venv/
 env/
 venv/
+.env
 
 # Build / Distribution
 .egg-info/
@@ -14,4 +16,11 @@ venv/
 dist/
 build/
 
+# Project Specific
 data/
+*.db
+sqlite.db
+
+# OS Specific
+.DS_Store
+Thumbs.db
