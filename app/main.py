@@ -68,7 +68,9 @@ def upload_file(
 
     # Save file to storage
     try:
-        saved_path = csv_service.save_upload(file.filename, file.file)
+        saved_path = csv_service.save_upload(
+            file.filename, file.file, has_header=has_header
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

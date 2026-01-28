@@ -22,6 +22,17 @@ def test_save_upload(csv_service):
     assert saved_path.read_bytes() == content
 
 
+def test_save_upload_with_no_header(csv_service):
+    content = b"0,dummy\n1,test"
+    file_obj = BytesIO(content)
+    file_name = "test_file.csv"
+
+    saved_path = csv_service.save_upload(file_name, file_obj, has_header=False)
+
+    assert saved_path.exists()
+    assert saved_path.read_bytes() == b"column_0,column_1\n" + content
+
+
 def test_get_columns_with_header(csv_service, tmp_path):
     file_path = tmp_path / "header.csv"
     file_path.write_text("user_id,email,status\n1,a@b.com,active")

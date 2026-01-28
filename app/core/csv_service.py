@@ -14,12 +14,18 @@ class CSVService:
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(exist_ok=True, parents=True)
 
-    def save_upload(self, file_name: str, file_obj) -> Path:
+    def save_upload(self, file_name: str, file_obj, has_header: bool = True) -> Path:
         """
         Streams the file object to disk to handle up to 100MB safely.
         """
         target_path = self.storage_path / self._generate_file_name(file_name)
         with target_path.open("wb") as buffer:
+            if not has_header:
+                df_peek = pd.read_csv(file_obj, nrows=0)
+                col_count = len(df_peek.columns)
+                header_str = ",".join([f"column_{i}" for i in range(col_count)]) + "\n"
+                buffer.write(header_str.encode("utf-8"))
+                file_obj.seek(0)
             shutil.copyfileobj(file_obj, buffer)
         return target_path
 
