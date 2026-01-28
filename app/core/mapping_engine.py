@@ -19,18 +19,8 @@ class MappingEngine:
         mapping_strategy: BaseMappingStrategy | None = None,
     ) -> Dict[str, str | None]:
         """
-        Docstring for run
-
-        :param self: self
-        :param source_columns: Columns of ingested source data
-        :type source_columns: List[str]
-        :param saved_mapping: Previously saved mapping that will be applied to result
-        :type saved_mapping: Dict[str, str | None] | None
-        :param mapping_strategy: Description
-        :type mapping_strategy: BaseMappingStrategy
-        :return: Mapping contains mapped result after apply previously saved mapping
-            and selected mapping strategy
-        :rtype: Dict[str, str | None]
+        Mapping contains mapped result after apply previously saved mapping
+        and selected mapping strategy
         """
         result = {target: None for target in self.schema.model_fields}
 
