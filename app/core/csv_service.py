@@ -28,9 +28,8 @@ class CSVService:
         """
         Append current timestamp for name uniqueness (naive approach)
         """
-        extension = file_name.split(".")[-1]
-        file_name_part = file_name[: -len(extension) + 1]
-        return file_name_part + str(int(time.time())) + f".{extension}"
+        timestamp = str(int(time.time()))
+        return timestamp + "_" + file_name
 
     def get_columns(self, file_path: Path, has_header: bool = True) -> List[str]:
         """
