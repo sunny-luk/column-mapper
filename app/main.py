@@ -6,6 +6,7 @@ from app.core.mapping_engine import MappingEngine
 from app.core.repository import SQLiteRepository
 from app.core.schemas.user_info import UserInfo
 from app.core.mapping_strategies.case_insensitive import CaseInsensitiveMappingStrategy
+from app.core.mapping_strategies.fuzzy_match import FuzzyMatchMappingStrategy
 from app.core.validation_service import ValidationService
 from typing import Annotated, Dict
 from pydantic import BaseModel
@@ -94,7 +95,7 @@ def upload_file(
     suggested_mapping = mapping_engine.run(
         source_columns=source_columns,
         saved_mapping=saved_mapping,
-        mapping_strategy=CaseInsensitiveMappingStrategy(),
+        mapping_strategy=FuzzyMatchMappingStrategy(),
     )
 
     return {
