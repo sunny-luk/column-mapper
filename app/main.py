@@ -7,7 +7,9 @@ from app.core.repository import SQLiteRepository
 from app.core.schemas.user_info import UserInfo
 from app.core.mapping_strategies.case_insensitive import CaseInsensitiveMappingStrategy
 from app.core.mapping_strategies.fuzzy_match import FuzzyMatchMappingStrategy
-from app.core.validation_service import ValidationService
+from app.core.validators.exceptions import ValidationException
+from app.core.validators.required_columns import RequiredColumnsValidator
+from app.core.validators.missing_value_columns import MissingValueColumnsValidator
 from typing import Annotated, Dict
 from pydantic import BaseModel
 
@@ -127,16 +129,30 @@ class ValidationRequest(BaseModel):
 
 @app.post("/validate")
 def validate_mapping(
-    request: ValidationRequest, schema: type[BaseModel] = Depends(get_schema)
+    request: ValidationRequest,
+    schema: type[BaseModel] = Depends(get_schema),
+    csv_service: CSVService = Depends(get_csv_service),
 ):
-    validator = ValidationService()
+    validators = [
+        RequiredColumnsValidator(),
+        MissingValueColumnsValidator(
+            filename=request.filename, csv_service=csv_service
+        ),
+    ]
+    errors = {}
 
-    missing_cols = validator.validate_columns(request.mapping, schema)
+    for validator in validators:
+        try:
+            validator.validate(request.mapping, schema)
+        except ValidationException as e:
+            errors[validator.validation_category()] = str(e)
 
-    if missing_cols:
+    if errors:
         raise HTTPException(
             status_code=400,
-            detail=f"Missing required mappings for: {', '.join(missing_cols)}",
+            detail="\n".join(
+                [f"{cat}: {error_msg}" for cat, error_msg in errors.items()]
+            ),
         )
 
     return {

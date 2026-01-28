@@ -141,7 +141,12 @@ def test_upload_file_mapping_not_found(test_setup):
     assert "Could not find saved mapping" in detail
 
 
-def test_validate_mapping_successful(test_setup):
+def test_validate_successful(test_setup):
+    # Upload dummy csv
+    csv_content = b"u,e,Phone\nalice,alice@example.com,12345"
+    with open(test_setup["storage"] / "abc.csv", "wb") as f:
+        f.write(csv_content)
+
     response = client.post(
         "/validate",
         json={"filename": "abc.csv", "mapping": {"username": "u", "email": "e"}},
@@ -149,13 +154,21 @@ def test_validate_mapping_successful(test_setup):
     assert response.status_code == 200
 
 
-def test_validate_mapping_failed(test_setup):
+def test_validate_failed(test_setup):
+    # Upload dummy csv
+    csv_content = b"u,e,Phone\nalice,,12345"
+    with open(test_setup["storage"] / "abc.csv", "wb") as f:
+        f.write(csv_content)
+
     response = client.post(
         "/validate",
-        json={"filename": "abc.csv", "mapping": {"phone_number": "p"}},
+        json={"filename": "abc.csv", "mapping": {"email": "e", "phone_number": "p"}},
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Missing required mappings for: email, username"
+    assert (
+        response.json()["detail"]
+        == "Required Mapping: Missing required mappings for: username\nNA values: NA(s) exist in: e"
+    )
 
 
 def test_process_and_save_unique_name_check(test_setup):

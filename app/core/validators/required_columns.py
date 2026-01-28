@@ -1,12 +1,10 @@
-import pandas as pd
-from typing import List, Dict
-from pydantic import BaseModel
+from .base import BaseValidator
+from .exceptions import ValidationException
 
 
-class ValidationService:
-    def validate_columns(
-        self, mapping: Dict[str, str | None], schema_class: type[BaseModel]
-    ) -> List[str]:
+class RequiredColumnsValidator(BaseValidator):
+
+    def validate(self, mapping, schema_class):
         """
         Checks if all required fields in the Pydantic schema
         are present in the user's mapping
@@ -22,6 +20,12 @@ class ValidationService:
         }
 
         # Check which required fields are missing from the mapping keys
-        missing_fields = list(required_fields - mapped_fields)
+        missing_fields = sorted(list(required_fields - mapped_fields))
 
-        return sorted(missing_fields)
+        if missing_fields:
+            raise ValidationException(
+                f"Missing required mappings for: {', '.join(missing_fields)}"
+            )
+
+    def validation_category(self) -> str:
+        return "Required Mapping"

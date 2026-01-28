@@ -48,3 +48,6 @@ class CSVService:
         except Exception as e:
             logger.error(f"Failed to parse columns: {e}")
             return []
+
+    def get_file_df(self, filename: str) -> pd.DataFrame:
+        return pd.read_csv(self.storage_path / filename)
