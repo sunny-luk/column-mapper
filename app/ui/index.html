@@ -64,8 +64,11 @@
             btn.innerText = "Processing...";
             status.classList.remove('hidden');
             status.innerText = "Uploading file...";
-
+            const form = e.target;
             const formData = new FormData(e.target);
+            // Explicitly handle the checkbox to ensure a boolean 'true' or 'false' is sent
+            const hasHeader = form.querySelector('input[name="has_header"]').checked;
+            formData.set('has_header', hasHeader);
             
             try {
                 const response = await fetch('/upload', { method: 'POST', body: formData });
