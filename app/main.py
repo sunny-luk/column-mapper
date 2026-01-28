@@ -6,6 +6,7 @@ from app.core.repository import SQLiteRepository
 from app.core.schemas.user_info import UserInfo
 from app.core.mapping_strategies.case_insensitive import CaseInsensitiveMappingStrategy
 from typing import Annotated
+from pydantic import BaseModel
 
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 STORAGE_PATH = os.getenv("STORAGE_PATH", "data/csv_storage")
@@ -25,10 +26,13 @@ def get_mapping_engine():
     return MappingEngine(UserInfo)
 
 
+def get_schema():
+    return UserInfo
+
+
 CSVServiceDep = Annotated[CSVService, Depends(get_csv_service)]
 RepoDep = Annotated[SQLiteRepository, Depends(get_repository)]
 EngineDep = Annotated[MappingEngine, Depends(get_mapping_engine)]
-schema = UserInfo
 
 app = FastAPI(title="Column Mapper API")
 
@@ -41,6 +45,7 @@ def upload_file(
     csv_service: CSVServiceDep = None,
     repository: RepoDep = None,
     mapping_engine: EngineDep = None,
+    schema: type[BaseModel] = Depends(get_schema),
 ):
     # File size validation
     if file.size and file.size > MAX_FILE_SIZE:

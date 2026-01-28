@@ -2,9 +2,10 @@ import pytest
 from fastapi.testclient import TestClient
 from pathlib import Path
 from io import BytesIO
-from app.main import app, get_csv_service, get_repository
+from app.main import app, get_csv_service, get_repository, get_schema
 from app.core.csv_service import CSVService
 from app.core.repository import SQLiteRepository
+from app.core.schemas.user_info import UserInfo
 
 client = TestClient(app)
 
@@ -26,6 +27,7 @@ def test_setup(tmp_path):
     # Apply overrides
     app.dependency_overrides[get_csv_service] = lambda: mock_csv_service
     app.dependency_overrides[get_repository] = lambda: mock_repo
+    app.dependency_overrides[get_schema] = lambda: UserInfo
 
     yield {"repo": mock_repo, "storage": temp_storage}
 
