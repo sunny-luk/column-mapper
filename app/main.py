@@ -38,8 +38,12 @@ EngineDep = Annotated[MappingEngine, Depends(get_mapping_engine)]
 
 app = FastAPI(title="Column Mapper API")
 
-# Mount the 'app/ui' folder to the '/ui' path
-app.mount("/ui", StaticFiles(directory="app/ui"), name="static")
+# Get the directory where main.py is located
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Construct the path to your static folder
+static_path = os.path.join(current_dir, "ui")
+
+app.mount("/ui", StaticFiles(directory=static_path), name="ui")
 
 
 @app.post("/upload", status_code=status.HTTP_201_CREATED)

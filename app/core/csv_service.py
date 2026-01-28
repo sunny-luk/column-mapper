@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class CSVService:
     def __init__(self, storage_path: str):
         self.storage_path = Path(storage_path)
-        self.storage_path.mkdir(exist_ok=True)
+        self.storage_path.mkdir(exist_ok=True, parents=True)
 
     def save_upload(self, file_name: str, file_obj) -> Path:
         """
