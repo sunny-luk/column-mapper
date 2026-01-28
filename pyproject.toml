@@ -1,0 +1,26 @@
+[project]
+name = "column-mapper"
+version = "0.1.0"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pandas",
+    "python-multipart",
+    "pydantic",
+    "pydantic[email]"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "httpx",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+# This flag explicitly disables the creation of the .pytest_cache folder
+addopts = "-p no:cacheprovider"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
