@@ -17,11 +17,26 @@ pip install -e ".[test]"
 pytest -v
 ```
 
+### Seed database, insert some saved mappings
+```bash
+python ./script/seed.py
+```
+
 ### Run local server [from root]
 ```bash
 fastapi dev app/main.py
 ```
 Web UI should be available on http://127.0.0.1:8000/ui/index.html
+
+### Schema
+The project uses a UserInfo schema (app/core/schemas/user_info.py)
+```
+class UserInfo(BaseModel):
+    username: str
+    email: EmailStr
+    phone: str | None = None
+```
+You can use dummy csv files in ./fixtures to have a test.
 
 ## High-level Architecture
 ![Alt Text](column-mapper.drawio.png)

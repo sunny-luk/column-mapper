@@ -1,0 +1,4 @@
+userName,eMail,phone_id
+jdoe,john.doe@example.com,123-456-7890
+asidney,,
+,invalid-email-address,555-0000
