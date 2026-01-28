@@ -20,8 +20,8 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b-2 border-gray-100">
-                            <th class="py-4 px-2 text-sm font-semibold text-gray-600 uppercase">CSV Column (Source)</th>
                             <th class="py-4 px-2 text-sm font-semibold text-gray-600 uppercase">System Field (Target)</th>
+                            <th class="py-4 px-2 text-sm font-semibold text-gray-600 uppercase">CSV Column (Source)</th>
                         </tr>
                     </thead>
                     <tbody id="mappingTableBody">
@@ -59,47 +59,47 @@
         });
 
         function renderTable() {
-            const tbody = document.getElementById('mappingTableBody');
-            const { source_columns, target_fields, suggested_mapping } = uploadData;
+          const tbody = document.getElementById('mappingTableBody');
+          const { source_columns, target_fields, suggested_mapping } = uploadData;
 
-            // Flip suggested mapping for easy lookup (target -> source to source -> target)
-            const suggestionLookup = {};
-            for (const [target, source] of Object.entries(suggested_mapping)) {
-                suggestionLookup[source] = target;
-            }
+          // suggested_mapping is { target_field: source_column }
+          // We iterate over the required target_fields
+          target_fields.forEach(field => {
+              const row = document.createElement('tr');
+              row.className = "border-b border-gray-50 hover:bg-gray-50 transition";
+              
+              // Find if we have a suggestion for this specific field
+              const suggestedSource = suggested_mapping[field] || "";
 
-            source_columns.forEach(col => {
-                const row = document.createElement('tr');
-                row.className = "border-b border-gray-50 hover:bg-gray-50 transition";
-                
-                row.innerHTML = `
-                    <td class="py-4 px-2 font-medium text-gray-700">${col}</td>
-                    <td class="py-4 px-2">
-                        <select class="mapping-select block w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-blue-500" data-source="${col}">
-                            <option value="">-- Ignore Column --</option>
-                            ${target_fields.map(field => `
-                                <option value="${field}" ${suggestionLookup[col] === field ? 'selected' : ''}>
-                                    ${field}
-                                </option>
-                            `).join('')}
-                        </select>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+              row.innerHTML = `
+                  <td class="py-4 px-2 font-semibold text-blue-900">${field}</td>
+                  <td class="py-4 px-2">
+                      <select class="mapping-select block w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-blue-500" data-target="${field}">
+                          <option value="">-- Leave Empty / Ignore --</option>
+                          ${source_columns.map(col => `
+                              <option value="${col}" ${suggestedSource === col ? 'selected' : ''}>
+                                  ${col}
+                              </option>
+                          `).join('')}
+                      </select>
+                  </td>
+              `;
+              tbody.appendChild(row);
+          });
+      }
 
-        async function processMapping() {
-            const btn = document.getElementById('processBtn');
-            const errorBox = document.getElementById('errorBox');
-            
-            // 1. Build the final mapping object from the dropdown values
-            const finalMapping = {};
-            document.querySelectorAll('.mapping-select').forEach(select => {
-                if (select.value) {
-                    finalMapping[select.value] = select.getAttribute('data-source');
-                }
-            });
+      async function processMapping() {
+          const btn = document.getElementById('processBtn');
+          const errorBox = document.getElementById('errorBox');
+          
+          // Build mapping: { target_field: selected_source_column }
+          const finalMapping = {};
+          document.querySelectorAll('.mapping-select').forEach(select => {
+              if (select.value) {
+                  const targetField = select.getAttribute('data-target');
+                  finalMapping[targetField] = select.value;
+              }
+          });
 
             btn.disabled = true;
             btn.innerText = "Processing Rows...";
