@@ -113,3 +113,27 @@ def test_upload_file_no_header(test_setup):
     # Verify the suggested mapping still attempts to work with these new names
     # (If your strategy handles 'column_n' or just returns empty)
     assert "suggested_mapping" in data
+
+
+def test_upload_file_mapping_not_found(test_setup):
+    """
+    Verify that providing a non-existent mapping name returns
+    a 400 error instead of a 500 or crashing.
+    """
+    # 1. Prepare dummy data
+    csv_content = b"col1,col2\nval1,val2"
+    file_name = "test.csv"
+    non_existent_mapping = "i_do_not_exist_in_db"
+
+    # 2. Execute POST with a fake mapping name
+    response = client.post(
+        "/upload",
+        files={"file": (file_name, BytesIO(csv_content), "text/csv")},
+        data={"has_header": "true", "apply_mapping_name": non_existent_mapping},
+    )
+
+    # 3. Assertions
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert non_existent_mapping in detail
+    assert "Could not find saved mapping" in detail
