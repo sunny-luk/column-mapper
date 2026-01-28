@@ -19,7 +19,7 @@ pytest -v
 
 ### Seed database, insert some saved mappings
 ```bash
-python ./script/seed.py
+python ./scripts/seed.py
 ```
 
 ### Run local server [from root]
