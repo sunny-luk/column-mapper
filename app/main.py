@@ -115,14 +115,14 @@ def list_mappings(repository: RepoDep):
         )
 
 
-class SaveMappingRequest(BaseModel):
+class ValidationRequest(BaseModel):
     filename: str
     mapping: Dict[str, str | None]
 
 
 @app.post("/validate")
 def validate_mapping(
-    request: SaveMappingRequest, schema: type[BaseModel] = Depends(get_schema)
+    request: ValidationRequest, schema: type[BaseModel] = Depends(get_schema)
 ):
     validator = ValidationService()
 
@@ -139,3 +139,23 @@ def validate_mapping(
         "message": "All required columns mapped successfully.",
         "mapped_count": len(request.mapping),
     }
+
+
+class SaveMappingRequest(BaseModel):
+    mapping_name: str
+    mapping: Dict[str, str | None]
+
+
+@app.post("/process")
+def process_and_save(request: SaveMappingRequest, repository: RepoDep = None):
+    # Unique name check
+    if repository.get_mapping(request.mapping_name):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Mapping name '{request.mapping_name}' already exists. Please choose another.",
+        )
+
+    # Save the mapping
+    repository.save_mapping(request.mapping_name, request.mapping)
+
+    return {"mapping_name": request.mapping_name}

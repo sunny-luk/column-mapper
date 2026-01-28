@@ -156,3 +156,21 @@ def test_validate_mapping_failed(test_setup):
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Missing required mappings for: email, username"
+
+
+def test_process_and_save_unique_name_check(test_setup):
+    used_mapping_name = "my_mapping"
+
+    repo = test_setup["repo"]
+    repo.save_mapping(used_mapping_name, {"email": "Custom_Email_Col"})
+
+    response = client.post(
+        "/process",
+        json={"mapping_name": used_mapping_name, "mapping": {"phone_number": "p"}},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.json()["detail"]
+        == f"Mapping name '{used_mapping_name}' already exists. Please choose another."
+    )

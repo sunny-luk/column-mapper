@@ -154,9 +154,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        filename: uploadData.saved_filename,
                         mapping: getMappingFromUI(),
-                        apply_mapping_name: mappingName 
+                        mapping_name: mappingName 
                     })
                 });
 
@@ -164,7 +163,7 @@
 
                 if (response.ok) {
                     alert("Mapping saved and data processed successfully!");
-                    sessionStorage.removeItem('pendingUpload');
+                    sessionStorage.removeItem('uploadResult');
                     window.location.href = '/ui/index.html';
                 } else {
                     throw new Error(result.detail || "Submission failed");
